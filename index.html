@@ -24,6 +24,15 @@
         display: none; /* Initially hide the retry button */
         margin-top: 10px;
     }
+    .correct {
+        color: green;
+    }
+    .incorrect {
+        color: red;
+    }
+    .error-message {
+        color: red;
+    }
 </style>
 </head>
 <body>
@@ -38,7 +47,7 @@
 <script>
     let startTime;
     let endTime;
-    let typedText = "";
+    const correctSequence = "A B C D E F G H I J K L M N O P Q R S T U V W X Y Z";
 
     function startTimer() {
         if (!startTime) {
@@ -47,26 +56,53 @@
     }
 
     function handleKeyPress(event) {
-        if (!startTime && event.key.match(/[a-zA-Z]/)) {
-            startTime = Date.now();
-        }
         if (event.key === 'Enter') {
             if (startTime) {
                 endTime = Date.now();
                 const timeTaken = (endTime - startTime) / 1000;
-                typedText = document.getElementById('userInput').value;
-                document.getElementById('typedText').textContent = `You typed "${typedText}"`;
-                if (typedText.replace(/\s/g, '').toUpperCase() === "A B C D E F G H I J K L M N O P Q R S T U V W X Y Z") {
+                const typedText = document.getElementById('userInput').value.trim();
+                document.getElementById('typedText').innerHTML = `You typed: "${highlightMistakes(typedText)}"`;
+                if (typedText.replace(/\s/g, '').toUpperCase() === correctSequence.replace(/\s/g, '')) {
                     document.getElementById('result').innerHTML = `It took ${timeTaken.toFixed(2)} seconds. <span class="tick"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/8b/Eo_circle_green_white_checkmark.svg/2048px-Eo_circle_green_white_checkmark.svg.png" alt="Checkmark"></span>`;
-                    document.getElementById('retryButton').style.display = 'inline-block'; // Display the retry button
                 } else {
-                    document.getElementById('result').textContent = `It took ${timeTaken.toFixed(2)} seconds.`;
+                    document.getElementById('result').innerHTML = `<span class="error-message">Incorrect sequence.</span> It took ${timeTaken.toFixed(2)} seconds.`;
                 }
+                document.getElementById('retryButton').style.display = 'inline-block'; // Display the retry button
                 document.getElementById('userInput').disabled = true; // Disable input after pressing Enter
             } else {
                 document.getElementById('result').textContent = "You haven't started typing yet!";
             }
         }
+    }
+
+    function highlightMistakes(input) {
+        const inputArray = input.split('');
+        const correctArray = correctSequence.split('');
+        let highlightedText = '';
+        let inputIndex = 0;
+        let correctIndex = 0;
+
+        while (correctIndex < correctArray.length) {
+            const correctChar = correctArray[correctIndex];
+            const inputChar = inputArray[inputIndex];
+
+            if (inputChar === ' ' && correctChar !== ' ') {
+                // Skip spaces in the input that don't match expected characters
+                inputIndex++;
+                continue;
+            }
+
+            if (inputChar && inputChar.toUpperCase() === correctChar) {
+                highlightedText += `<span class="correct">${inputChar}</span>`;
+            } else {
+                highlightedText += `<span class="incorrect">${inputChar ? inputChar : ''}</span>`;
+            }
+
+            inputIndex++;
+            correctIndex++;
+        }
+
+        return highlightedText;
     }
 
     function retryGame() {
@@ -76,7 +112,6 @@
         document.getElementById('retryButton').style.display = 'none'; // Hide the retry button again
         startTime = null;
         endTime = null;
-        typedText = "";
         document.getElementById('userInput').disabled = false;
     }
 </script>
